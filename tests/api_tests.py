@@ -193,6 +193,49 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(post.title, "Example Post")
         self.assertEqual(post.body, "Just a test")
 
+    def test_update_post(self):
+        data = {
+            "title": "",
+            "body": ""
+        }
+
+        response = self.client.post("/api/posts",
+            data=json.dumps(data),
+            content_type="application/json",
+            headers=[("Accept", "application/json")]
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(urlparse(response.headers.get("Location")).path,
+                         "/api/posts/1")
+
+        data = {
+            "title": "New Post Title",
+            "body": "New Post Content"
+        }
+
+        response = self.client.put("/api/posts/1",
+            data=json.dumps(data),
+            content_type="application/json",
+            headers=[("Accept", "application/json")]
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/json")
+
+        #self.assertEqual(urlparse(response.headers.get("Location")).path,
+                         #"/api/posts/1")
+
+        posts = session.query(models.Post).all()
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(response.mimetype, "application/json")
+
+        #TODO If I try to check post content I am told post object does not accept indexing.
+        post = posts[0]
+        self.assertEqual(post.title, "New Post Title")
+        self.assertEqual(post.body, "New Post Content")
+
     def test_unsupported_mimetype(self):
         data = "<xml></xml>"
         response = self.client.post("/api/posts",
